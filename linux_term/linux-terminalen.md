@@ -200,13 +200,13 @@ chmod -R 600 ~/.ssh/         # Rekursivt: kun ejer må læse SSH-nøgler
 
 ```bash
 # Lokal → Remote
-scp ./minfil.txt bruger@server:/home/bruger/
+scp ./minfil.txt azureuser@server:/home/azureuser/
 
 # Remote → Lokal
-scp bruger@server:/home/bruger/fjernfil.txt .
+scp azureuser@server:/home/azureuser/fil.txt .
 
 # Rekursiv (hele mapper)
-scp -r ./projekt/ bruger@server:/home/bruger/
+scp -r azureuser@server:/home/azureuser/projekt/ .
 ```
 
 > **Sig:** "SCP bruger samme SSH-forbindelse som dit login — al trafik er krypteret. Perfekt til at flytte filer sikkert mellem maskiner."
