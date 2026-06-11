@@ -1,0 +1,57 @@
+# =============================================================================
+# CD-demonstration — GitHub Actions → ACR (Azure Container Registry)
+#
+# Demonstrationer i denne fil:
+#   1. CD-workflow: Byg Docker image → push til Azure Container Registry
+#   2. workflow_dispatch: — manuel trigger til ad-hoc deploy
+#   3. Secrets: ACR-login med GitHub Secrets (ACR_USERNAME, ACR_PASSWORD)
+#   4. Image tagging: Både commit-SHA og 'latest' tag
+# =============================================================================
+# Brug i eksamen:
+#   - Vis filen i VS Code under "CD-delen af GitHub Actions-workflow"
+#   - Peg på: jobs → steps → uses (azure/docker-login) → run (docker build/push)
+#   - Forklar at docker build bruger Dockerfile i docker/-mappen
+# =============================================================================
+
+name: CD — Byg og push til Azure Container Registry
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:          # Manuel trigger via GitHub UI
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Tjek kode ud ──────────────────────────────────────────────────────
+      - name: Tjek kode ud
+        uses: actions/checkout@v4
+
+      # ── Login til Azure Container Registry ────────────────────────────────
+      # Bruger credentials gemt som GitHub Secrets (ACR_USERNAME + ACR_PASSWORD)
+      # Disse sættes i GitHub repo → Settings → Secrets and variables → Actions
+      - name: Login til Azure Container Registry
+        uses: azure/docker-login@v2
+        with:
+          login-server: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      # ── Byg og push Docker image ──────────────────────────────────────────
+      # Dockerfile ligger i docker/-mappen (ikke i roden)
+      # Vi tagger med både commit-SHA (entydig) og 'latest' (seneste)
+      - name: Byg og push Docker image
+        run: |
+          IMAGE="${{ secrets.ACR_LOGIN_SERVER }}/my-app"
+          docker build -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:latest" ./docker
+          docker push "$IMAGE:${{ github.sha }}"
+          docker push "$IMAGE:latest"
+
+      # ── Bekræft at image er pushet ────────────────────────────────────────
+      - name: Bekræft push
+        run: |
+          echo "✅ Image pushet til ACR:"
+          echo "   ${{ secrets.ACR_LOGIN_SERVER }}/my-app:${{ github.sha }}"
+          echo "   ${{ secrets.ACR_LOGIN_SERVER }}/my-app:latest"

@@ -241,11 +241,12 @@ Internet ──→ [NSG: port 8080 åben] ──→ VM ──→ [Docker: -p 808
 
 | # | Demonstration | Fil / sted |
 |---|---------------|------------|
-| 1 | CD-delen af GitHub Actions-workflow (byg + push til ACR) | `.github/workflows/deploy.yml` i Java-projekt |
+| 1 | CD-delen af GitHub Actions-workflow (byg + push til ACR) | `.github/workflows/deploy.yml` — CD workflow |
 | 2 | SSH-indlogning på cloud VM | Terminal — `ssh azureuser@<vm-ip>` |
 | 3 | Vis kørende Docker-container på VM | Terminal på VM — `docker ps` |
-| 4 | Vis/ændr NSG firewall-regler | Azure Portal → VM → Networking, eller Azure CLI |
+| 4 | Vis/ændr NSG firewall-regler | Azure Portal → VM → Networking, eller Azure CLI (`cloud/demo.sh`) |
 | 5 | App'en i browseren (med og uden firewall-regel) | `http://<vm-ip>:8080` |
+| — | **Hele demo-flowet samlet** | **`cloud/demo.sh`** — demo-manuskript med alle kommandoer |
 
 ---
 
