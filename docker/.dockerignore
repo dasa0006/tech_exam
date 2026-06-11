@@ -1,0 +1,7 @@
+# Undgå at invalidere build cache med unødvendige filer
+.git
+.gitignore
+node_modules/
+target/
+*.md
+docker.md
