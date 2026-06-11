@@ -1,0 +1,80 @@
+# =============================================================================
+# CI/CD-demonstration — GitHub Actions (Maven + Java 17)
+#
+# Demonstrationer i denne fil:
+#   1. CI-workflow med Maven-test (byg → test → artifact)
+#   2. Caching af Maven-dependencies med actions/cache@v4
+#   3. workflow_dispatch: — manuel trigger
+#   4. Hash-pinning af actions (vis @v4 vs commit-SHA)
+# =============================================================================
+
+name: CI — Maven byg og test
+
+# ─── DEMO 3: workflow_dispatch: ─────────────────────────────────────────────
+# Gør det muligt at køre workflow manuelt fra GitHub UI (Actions-fanen).
+# Bruges til ad-hoc tests, manuelt deploy, genkørsel.
+on:
+  push:                              # Kør ved push til main
+    branches: [ main ]
+  pull_request:                      # Kør ved pull requests mod main
+    branches: [ main ]
+  workflow_dispatch:                 # Manuelt trigger via GitHub UI
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── DEMO 1: Tjekker kode ud ──────────────────────────────────────────
+      # DEMO 4: Hash-pinning — erstat @v4 med commit-SHA for reproducerbarhed
+      #   Find SHA: https://github.com/actions/checkout/releases
+      #   Eksempel: uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+      #                                             ^--- commit-SHA for @v4
+      - name: Tjek kode ud
+        uses: actions/checkout@v4
+
+      # ── DEMO 1: Sæt JDK op ───────────────────────────────────────────────
+      - name: Sæt JDK 17 op
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # ── DEMO 2: Caching af Maven-dependencies ────────────────────────────
+      # Problem: Hentning af 3rd-party jars tager lang tid hver gang.
+      # Løsning: Cache ~/.m2/repository med hash af pom.xml som key.
+      #   - Ved match: Gendan cache → intet download.
+      #   - Ved miss: Download almindeligt → ny cache oprettes.
+      # restore-keys: Giver delvist match hvis pom.xml har ændret sig.
+      - name: Cache Maven-dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      # ── DEMO 1: Byg og test ──────────────────────────────────────────────
+      # mvn verify kører hele build-lifecycle: compile → test → package → verify
+      # inkluderer både enhedstests (surefire) og integrationstests (failsafe).
+      - name: Byg og test med Maven
+        run: mvn verify --batch-mode
+
+      # ── DEMO 1: Upload artifact ──────────────────────────────────────────
+      # Gemmer den byggede JAR som et artifact, så den kan hentes fra GitHub UI.
+      - name: Upload artifact (JAR)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-demo-jar
+          path: target/*.jar
+
+  # ── DEMO 4: Hash-pinning-eksempel (separat job, ikke nødvendigt) ──────────
+  # Nedenstående viser et step med hash-pinned checkout i stedet for @v4.
+  # Dette er KUN til demonstration — kommenteret ud for ikke at duplikere.
+  #
+  # steps:
+  #   - name: Tjek kode ud (hash-pinned)
+  #     uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
+  #     #     ^--- commit-SHA for v4.2.2 (reproducerbar — ændrer sig ikke)
+  #   - name: Byg og test
+  #     run: mvn verify --batch-mode
