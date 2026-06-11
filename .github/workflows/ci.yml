@@ -23,7 +23,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: ./ci_cd_github_actions
+        
     steps:
       # ── DEMO 1: Tjekker kode ud ──────────────────────────────────────────
       # DEMO 4: Hash-pinning — erstat @v4 med commit-SHA for reproducerbarhed
@@ -50,7 +53,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          key: ${{ runner.os }}-maven-${{ hashFiles('ci_cd_github_actions/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
 
@@ -66,7 +69,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ci-demo-jar
-          path: target/*.jar
+          path: ci_cd_github_actions/target/*.jar
 
   # ── DEMO 4: Hash-pinning-eksempel (separat job, ikke nødvendigt) ──────────
   # Nedenstående viser et step med hash-pinned checkout i stedet for @v4.
